@@ -10,7 +10,7 @@ int acc_x_array_index=0;
 int acc_z_array[4];
 int acc_z_array_index=0;//declaring array and its variables
 boolean is_hello , is_yes , is_love ,is_you , is_like;
-int hello_yes_threshold_acc_x = /* !!!! type a threshold */ , hello_yes_threshold_acc_y = /* !!!! */ , you_threshold_acc_z = /* !!!! */ , you_threshold_acc_y = /* !!!! */ ;
+int hello_yes_threshold_acc_x = 50/* !!!! type a threshold */ , hello_yes_threshold_acc_y = -55/* !!!! */ , you_threshold_acc_z = 50/* !!!! */ , you_threshold_acc_y = -55/* !!!! */ ;
 
 void setup(){
   Serial.begin(9600);
@@ -25,7 +25,7 @@ void setup(){
 void loop(){
   int acc_x = analogRead(A5)-352 , acc_y=analogRead(A6)-352 , acc_z=analogRead(A7)-352 ;//creating accelerometer readings
   int  hello_threshold_acc_x_count=0 , yes_threshold_acc_x_count=0 ,you_threshold_acc_z_count=0 ;
-  int flex_thumb = analogRead(A0) , flex_index = analogRead(A1) , flex_middle = analogRead(A2) , flex_ring = analogRead(A3) , flex_pinky = analogRead(A4) ;//reading flex sensor values
+  int flex_thumb = analogRead(A0)-760 , flex_index = analogRead(A1)-720 , flex_middle = analogRead(A2)-697 , flex_ring = analogRead(A3)-770 , flex_pinky = analogRead(A4)-790 ;//reading flex sensor values
   
   Serial.print("ax = ");
   Serial.print(acc_x);
@@ -38,7 +38,7 @@ void loop(){
   Serial.print("az = ");
   Serial.print(acc_z);
   Serial.println("\t");
-  Serial.print("\n")
+  Serial.print("\n") ;
 
   Serial.print("thumb = ");
   Serial.print(flex_thumb);
@@ -65,16 +65,16 @@ void loop(){
   acc_x_array[acc_x_array_index] = acc_x ;
   acc_x_array_index = (acc_x_array_index+1)%4; 
 
-  acc_z_array[acc_x_array_index] = acc_x ;
+  acc_z_array[acc_x_array_index] = acc_z ;
   acc_z_array_index = (acc_x_array_index+1)%4; // creating acc_x_array and acc_z_array
   
   for(int j=0 ; j<4 ; j++) {
-    if( acc_x_array[j] > hello_yes_threshold_acc_x && acc_y > hello_yes_threshold_acc_y ){
-      if(/* !!!! add flex sensor threshold for hello */) {
+    if( acc_x_array[j] > hello_yes_threshold_acc_x && acc_y < hello_yes_threshold_acc_y ){
+      if(/*higher values*/ flex_thumb < 23 && flex_index < 12 && flex_middle <24 && flex_ring <24 && flex_pinky<23) {
         hello_threshold_acc_x_count++ ;
         if(hello_threshold_acc_x_count = 4) is_hello = true ;
       }
-      if(/* !!!! add flex sensor threshold for yes */) {
+      if(/*lower values*/flex_thumb > 50 && flex_index >145 && flex_middle > 110 && flex_ring >65 && flex_pinky>55) {
         yes_threshold_acc_x_count++ ;
         if(yes_threshold_acc_x_count = 4) is_yes = true ;
       }
@@ -83,18 +83,27 @@ void loop(){
   }
 //check for you 
   for(int j=0 ; j<4 ; j++) {
-    if(/* !!!! add flex sensor threshold for hello */ acc_z_array[j] > you_threshold_acc_z && acc_y > you_threshold_acc_y ){
+    if(/* !!!! add flex sensor threshold for hello */ acc_z_array[j] > you_threshold_acc_z && acc_y < you_threshold_acc_y ){
       you_threshold_acc_z_count++ ;
       if(you_threshold_acc_z_count = 4) is_you = true ;
     }
   
   //check for "i love you"
-  if(/* !!!! add flex sensor threshold for " i love you " */) {
+  if(/*lower values*/flex_thumb > 0 && flex_index >-5 && flex_middle > 90 && flex_ring >50 && flex_pinky>-5 &&
+    /*higher values*/ flex_thumb < 20 && flex_index < 13 && flex_middle <140 && flex_ring <80 && flex_pinky<16) {
     is_love = true ;
   }
 
-  if(/* !!!! add flex sensor threshold for like*/) {
+  // check for like
+  if( /*lower values*/flex_thumb > -20 && flex_index >105 && flex_middle > 105 && flex_ring >60 && flex_pinky>50 &&
+    /*higher values*/ flex_thumb < 5 && flex_index < 160 && flex_middle <130 && flex_ring <100 && flex_pinky<85) {
     is_like = true ;
+  }
+
+  //check for fuckoff
+  if( /*lower values*/flex_thumb > 5 && flex_index >110 && flex_middle > 5 && flex_ring >55 && flex_pinky>40 &&
+    /*higher values*/ flex_thumb < 60 && flex_index < 115 && flex_middle <22 && flex_ring <85 && flex_pinky<70) {
+    is_fuckoff = true ;
   }
 
  
@@ -104,6 +113,10 @@ void loop(){
 
     Serial.println("hello") ;
     tmrpcm.play("hello.wav");
+    for(int i=0 ; i<4 ; i++){
+      acc_x_array[i] = 0 ;
+    }
+    is_hello = false ;
     delay(1000);
   }// give hello output
 
@@ -111,24 +124,41 @@ void loop(){
 
     Serial.println("yes") ;
     tmrpcm.play("yes.wav");
+    for(int i=0 ; i<4 ; i++){
+      acc_x_array[i] = 0 ;
+    }
+    is_yes=false ;
     delay(1000);
   }// give yes output
 
   if(is_love) {
     Serial.println("i love you") ;
     tmrpcm.play("love.wav");
+    is_love=false ;
     delay(1000);
   }// give "i love you " output
 
   if(is_you) {
     Serial.println("you") ;
     tmrpcm.play("you.wav");
+    is_you=false ;
+    for(int i=0 ; i<4 ; i++){
+      acc_z_array[i] = 0 ;
+    }
     delay(1000);
   }
 
   if(is_like) {
     Serial.println("like") ;
     tmrpcm.play("like.wav");
+    is_like=false ;
+    delay(1000);
+  }
+
+  if(is_fuckoff) {
+    Serial.println("Fuck Off") ;
+    tmrpcm.play("fuckoff.wav");
+    is_like=false ;
     delay(1000);
   }
 
